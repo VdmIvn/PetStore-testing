@@ -22,9 +22,6 @@ public class APItests
     {
         // Arrange
         var request = new RestRequest("/v2/pet", Method.Post);
-        request.AddHeader("Content-Type", "application/json");
-
-
         var body = JsonSerializer.Serialize(new Root
         {
             id = 100,
@@ -85,7 +82,7 @@ public class APItests
 
         // Assert
         Assert.AreEqual("OK", response.StatusCode.ToString());
-        Assert.AreEqual("unknown", result.name);
+        Assert.AreEqual("unknown", result.type);
         Assert.AreEqual("100", result.message);
     }
 }
