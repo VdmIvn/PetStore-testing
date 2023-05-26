@@ -4,80 +4,88 @@ using System.Text.Json;
 
 namespace PetStore.API.Tests;
 
-[TestClass]
+[TestFixture]
 public class APItests
 {
+    private RestClient _client;
 
-    [TestMethod]
-    public async Task AddNewPet()
+    [SetUp]
+    public void Setup()
+    {
+        var baseUrl = "https://petstore.swagger.io";
+        _client = new RestClient(new RestClientOptions(baseUrl));
+    }
+
+    [Test, Order(0)]
+
+    public void AddNewPet()
     {
         // Arrange
-        var options = new RestClientOptions("https://petstore.swagger.io")
-        {
-            MaxTimeout = -1,
-        };
-        var client = new RestClient(options);
         var request = new RestRequest("/v2/pet", Method.Post);
         request.AddHeader("Content-Type", "application/json");
 
-        var expected = new Root
-        {
-            Name = "Tom",
-        };
-    //    var body = @"{
-    //" + "\n" +
-    //@"    ""id"": 100,
-    //" + "\n" +
-    //@"    ""name"": ""Tom""
-    //" + "\n" + @"}";
 
         var body = JsonSerializer.Serialize(new Root
         {
-            Id = 100,
-            Name = "Tom"
+            id = 100,
+            name = "Tom"
         });
         request.AddStringBody(body, DataFormat.Json);
 
         // Act
-        RestResponse response = await client.ExecuteAsync(request);
+        RestResponse response = _client.Execute(request);
         var result = JsonSerializer.Deserialize<Root>(response.Content);
 
         // Assert
         Assert.AreEqual(200, (int)response.StatusCode);
-        Assert.AreEqual(expected.Name, result.Name);
+        Assert.AreEqual("Tom", result.name);
     }
 
-    [TestMethod]
+    [Test, Order(1)]
 
     public async Task FindPetByID()
     {
-        var options = new RestClientOptions("https://petstore.swagger.io")
-        {
-            MaxTimeout = -1,
-        };
-        var client = new RestClient(options);
+        // Arrange
         var request = new RestRequest("/v2/pet/100", Method.Get);
-        RestResponse response = await client.ExecuteAsync(request);
-        Console.WriteLine(response.Content);
 
+        // Act
+        RestResponse response = await _client.ExecuteAsync(request);
+        var result = JsonSerializer.Deserialize<Root>(response.Content);
+
+        // Assert
         Assert.AreEqual("OK", response.StatusCode.ToString());
+        Assert.AreEqual("Tom", result.name);
     }
 
-    [TestMethod]
+    [Test, Order(2)]
 
-    public async Task AttemptToFindUnexistingPet()
+    public async Task AttemptToFindNonexistentPet()
     {
-        var options = new RestClientOptions("https://petstore.swagger.io")
-        {
-            MaxTimeout = -1,
-        };
-        var client = new RestClient(options);
+        // Arrange
         var request = new RestRequest("/v2/pet/100000", Method.Get);
-        RestResponse response = await client.ExecuteAsync(request);
-        Console.WriteLine(response.Content);
 
+        // Act
+        RestResponse response = await _client.ExecuteAsync(request);
+        var result = JsonSerializer.Deserialize<Root>(response.Content);
+
+        // Assert
         Assert.AreEqual("NotFound", response.StatusCode.ToString());
-        //Assert.AreEqual("Pet not found", response.message);
+        Assert.AreEqual("Pet not found", result.message);
     }
 
+    [Test, Order(3)]
+    public async Task DeletePet()
+    {
+        // Arrange
+        var request = new RestRequest("/v2/pet/100", Method.Delete);
+
+        // Act
+        RestResponse response = await _client.ExecuteAsync(request);
+        var result = JsonSerializer.Deserialize<Root>(response.Content);
+
+        // Assert
+        Assert.AreEqual("OK", response.StatusCode.ToString());
+        Assert.AreEqual("unknown", result.name);
+        Assert.AreEqual("100", result.message);
+    }
 }

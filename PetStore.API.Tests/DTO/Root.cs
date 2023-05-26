@@ -3,10 +3,10 @@
 namespace PetStore.API.Tests.DTO;
 public class Root
 {
-    [JsonPropertyName("id")]
-    public int Id { get; set; }
-
-    [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public int id { get; set; }
+    public string name { get; set; }
+    public int code { get; set; }
+    public string type { get; set; }
+    public string message { get; set; }
 }
 
